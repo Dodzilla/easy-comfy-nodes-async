@@ -1,6 +1,7 @@
 import requests
 import base64
 import io
+import threading
 import numpy as np
 from PIL import Image, ImageOps
 import torch
@@ -22,10 +23,19 @@ class HttpPostNode:
     CATEGORY = "HTTP"
     OUTPUT_NODE=True
 
+    def _perform_post(self, url, body):
+        try:
+            response = requests.post(url, json=body)
+            print(f"Background POST to {url} completed. Status: {response.status_code}, Response: {response.text}")
+        except requests.exceptions.RequestException as e:
+            print(f"Background POST to {url} failed: {e}")
+
     def execute(self, url, body):
-        response = requests.post(url, json=body)
-        print(response, response.status_code, response.text)
-        return (response.status_code,)
+        thread = threading.Thread(target=self._perform_post, args=(url, body))
+        thread.daemon = True
+        thread.start()
+        print(f"HTTP POST request to {url} initiated in background.")
+        return (202,)
 
 class EmptyDictNode:
     @classmethod
