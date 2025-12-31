@@ -23,6 +23,9 @@ Nodes for handling http requests as part of a workflow, these can be used to cre
 - Load Img From URL: loads an image from a url, this also works for data urls and s3 uris (using the default credential provider)
 - Load Img Batch From URLs: loads a batch of images from a set of URLs on separate lines, loaded just as the single-url node
 
+### Latent Nodes
+- Load Latent From Path: wrapper around core ComfyUI `Load Latent` that takes a `STRING` filename/path, so you can wire it to other nodes (e.g., download-then-load)
+
 ### Dict Nodes
 Some nodes for handling dictionary/map data structures
 

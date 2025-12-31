@@ -398,6 +398,40 @@ class DownloadFilesToInputNode:
 
         return ("\n".join(saved_paths), downloaded_count)
 
+
+class LoadLatentFromPathNode:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {"latent_path": ("STRING", {"default": ""})}}
+
+    RETURN_TYPES = ("LATENT",)
+    RETURN_NAMES = ("latent",)
+    FUNCTION = "execute"
+    CATEGORY = "Latent"
+
+    def execute(self, latent_path):
+        try:
+            import nodes as comfy_nodes  # type: ignore
+        except Exception as e:
+            raise Exception("ComfyUI core module `nodes` was not found; this node must run inside ComfyUI.") from e
+
+        if not hasattr(comfy_nodes, "LoadLatent"):
+            raise Exception("ComfyUI core node `LoadLatent` was not found (nodes.LoadLatent).")
+
+        loader = comfy_nodes.LoadLatent()
+        preferred_fn = getattr(loader, "FUNCTION", None) or getattr(comfy_nodes.LoadLatent, "FUNCTION", None)
+        candidate_fns = []
+        if isinstance(preferred_fn, str):
+            candidate_fns.append(preferred_fn)
+        candidate_fns.extend(["load", "load_latent", "execute"])
+
+        for fn_name in candidate_fns:
+            fn = getattr(loader, fn_name, None)
+            if callable(fn):
+                return fn(latent_path)
+
+        raise Exception("Unable to call ComfyUI core LoadLatent implementation.")
+
 class S3Upload:
     """
     Uploads first file from VHS_FILENAMES from ComfyUI-VideoHelperSuite to S3.
@@ -442,6 +476,7 @@ NODE_CLASS_MAPPINGS = {
     "EZLoadImgFromUrlNode": LoadImageFromUrlNode,
     "EZLoadImgBatchFromUrlsNode": LoadImagesFromUrlsNode,
     "EZDownloadFilesToInputNode": DownloadFilesToInputNode,
+    "EZLoadLatentFromPathNode": LoadLatentFromPathNode,
     "EZS3Uploader": S3Upload,
 }
 
@@ -454,5 +489,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "EZLoadImgFromUrlNode": "Load Img From URL (EZ)",
     "EZLoadImgBatchFromUrlsNode": "Load Img Batch From URLs (EZ)",
     "EZDownloadFilesToInputNode": "Download Files To Input (EZ)",
+    "EZLoadLatentFromPathNode": "Load Latent From Path (EZ)",
     "EZS3Uploader": "S3 Upload (EZ)",
 }
